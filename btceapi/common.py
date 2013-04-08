@@ -3,7 +3,7 @@ import json
 
 btce_domain = "btc-e.com"
 
-all_currencies = ("btc", "usd", "rur", "ltc", "nmc", "eur", "nvc")  
+all_currencies = ("btc", "usd", "rur", "ltc", "nmc", "eur", "nvc", "trc", "ppc")  
 all_pairs = ("btc_usd", "btc_rur", "ltc_btc", "ltc_usd", "ltc_rur",
              "nmc_btc", "usd_rur", "eur_usd", "nvc_btc", "trc_btc",
              "ppc_btc")
