@@ -72,6 +72,7 @@ def validatePair(pair):
         raise Exception("Unrecognized pair: %r" % pair)
         
 def formatCurrency(value, maxdigits):
+    s = round(value, maxdigits)
     s = "%.8f" % value
     s = s[:s.index(".")+maxdigits+1]
     
