@@ -127,10 +127,10 @@ class ScraperResults:
                 
 def scrapeMainPage(connection = None):
     if connection is None:
-        connection = common.BTCEConnection()
+        connection = BTCEConnection()
     
     parser = BTCEScraper()
-    parser.feed(makeRequest('/'))
+    parser.feed(connection.makeRequest('/'))
     parser.close()
     
     r = ScraperResults()
