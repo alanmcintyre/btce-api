@@ -6,6 +6,24 @@ import decimal
 from btceapi import common
 
 
+def getTradeFee(pair, connection=None):
+    '''Retrieve the fee associated with trades for a given pair'''
+
+    common.validatePair(pair)
+
+    if connection is None:
+        connection = common.BTCEConnection()
+
+    fees = connection.makeJSONRequest("/api/2/%s/fee" % pair)
+    if type(fees) is not dict:
+        raise Exception("The response is not a dict.")
+
+    trade_fee = fees.get(u'trade')
+    if type(trade_fee) is not decimal.Decimal:
+        raise Exception("The response does not contain a trade fee")
+
+    return trade_fee
+
 def getDepth(pair, connection=None):
     '''Retrieve the depth for the given pair.  Returns a tuple (asks, bids);
     each of these is a list of (price, volume) tuples.'''
