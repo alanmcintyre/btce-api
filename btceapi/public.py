@@ -3,7 +3,7 @@
 import datetime
 import decimal
 
-from btceapi import common
+from . import common
 
 
 def getTradeFee(pair, connection=None):
