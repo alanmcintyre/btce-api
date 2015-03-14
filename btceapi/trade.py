@@ -170,8 +170,8 @@ class TradeAPI(object):
                 # The assumption is that the invalid nonce message looks like
                 # "invalid nonce parameter; on key:4, you sent:3"
                 s = err_message.split(",")
-                expected = int(s[-2].split(":")[1])
-                actual = int(s[-1].split(":")[1])
+                expected = int(s[-2].split(":")[1].strip("'"))
+                actual = int(s[-1].split(":")[1].strip("'"))
                 if raiseIfInvalidNonce:
                     raise InvalidNonceException(method, expected, actual)
 

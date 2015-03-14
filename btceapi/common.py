@@ -96,7 +96,11 @@ BODY_COOKIE_RE = re.compile(r'document\.cookie="a=([a-f0-9]{32});path=/;";')
 
 class BTCEConnection:
     def __init__(self, timeout=30):
-        self.conn = httplib.HTTPSConnection(btce_domain, timeout=timeout)
+        self._timeout = timeout
+        self.setup_connection()
+
+    def setup_connection(self):
+        self.conn = httplib.HTTPSConnection(btce_domain, timeout=self._timeout)
         self.cookie = None
 
     def close(self):
@@ -105,8 +109,15 @@ class BTCEConnection:
     def getCookie(self):
         self.cookie = ""
 
-        self.conn.request("GET", '/')
-        response = self.conn.getresponse()
+        try:
+            self.conn.request("GET", '/')
+            response = self.conn.getresponse()
+        except Exception:
+            # reset connection so it doesn't stay in a weird state if we catch
+            # the error in some other place
+            self.conn.close()
+            self.setup_connection()
+            raise
 
         setCookieHeader = response.getheader("Set-Cookie")
         match = HEADER_COOKIE_RE.search(setCookieHeader)
@@ -129,8 +140,9 @@ class BTCEConnection:
                 self.getCookie()
 
             headers.update({"Cookie": self.cookie})
-
-        self.conn.request("POST", url, params, headers)
+        try:
+            self.conn.request("POST", url, params, headers)
+        finally:
         response = self.conn.getresponse().read()
 
         return response
@@ -160,7 +172,7 @@ def validateOrder(pair, trade_type, rate, amount):
     minimum_amount = min_orders[pair]
     formatted_min_amount = formatCurrency(minimum_amount, pair)
     if amount < minimum_amount:
-        msg = "Trade amount too small; should be >= %s" % formatted_min_amount
+        msg = "Trade amount %r is too small, it should be >= %s" % (amount,formatted_min_amount)
         raise InvalidTradeAmountException(msg)
 
 
