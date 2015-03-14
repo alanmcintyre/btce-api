@@ -143,7 +143,7 @@ class BTCEConnection:
         try:
             self.conn.request("POST", url, params, headers)
         finally:
-        response = self.conn.getresponse().read()
+            response = self.conn.getresponse().read()
 
         return response
 
