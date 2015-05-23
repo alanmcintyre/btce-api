@@ -27,7 +27,7 @@ all_currencies = ("btc", "usd", "rur", "ltc", "nmc", "eur", "nvc",
 all_pairs = ("btc_usd", "btc_rur", "btc_eur", "btc_cnh", "btc_gbp",
              "ltc_btc", "ltc_usd", "ltc_rur", "ltc_eur", "ltc_cnh",
              "ltc_gbp", "nmc_btc", "nmc_usd", "nvc_btc", "nvc_usd",
-             "usd_rur", "eur_usd", "eur_rur", "usd_cnh", "gbp_usd",
+             "usd_rur", "usd_cnh", "eur_usd", "eur_rur", "gbp_usd",
              "ppc_btc", "ppc_usd")
 
 max_digits = {"btc_usd": 3,
