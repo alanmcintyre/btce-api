@@ -90,7 +90,7 @@ BODY_COOKIE_RE = re.compile(r'document\.cookie="a=([a-f0-9]{32});path=/;";')
 
 class BTCEConnection:
     def __init__(self, timeout=30):
-        if (os.environ['HTTPS_PROXY']):
+        if ("HTTPS_PROXY" in os.environ):
           match = re.search(r'http://([\w.]+):(\d+)',os.environ['HTTPS_PROXY'])
           if match:
             self.conn = httplib.HTTPSConnection(match.group(1),
