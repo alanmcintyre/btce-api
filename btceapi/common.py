@@ -4,6 +4,7 @@ import httplib
 import json
 import decimal
 import re
+import os
 
 class InvalidTradePairException(Exception):
     ''' Exception raised when an invalid pair is passed. '''
@@ -89,7 +90,15 @@ BODY_COOKIE_RE = re.compile(r'document\.cookie="a=([a-f0-9]{32});path=/;";')
 
 class BTCEConnection:
     def __init__(self, timeout=30):
-        self.conn = httplib.HTTPSConnection(btce_domain, timeout=timeout)
+        if ("HTTPS_PROXY" in os.environ):
+          match = re.search(r'http://([\w.]+):(\d+)',os.environ['HTTPS_PROXY'])
+          if match:
+            self.conn = httplib.HTTPSConnection(match.group(1),
+                                                port=match.group(2),
+                                                timeout=timeout)
+          self.conn.set_tunnel(btce_domain)
+        else:
+          self.conn = httplib.HTTPSConnection(btce_domain, timeout=timeout)
         self.cookie = None
 
     def close(self):
