@@ -3,7 +3,7 @@
 from HTMLParser import HTMLParser
 import datetime
 import warnings
-from btceapi.common import BTCEConnection, all_pairs
+from .common import BTCEConnection, all_pairs
 
 
 class BTCEScraper(HTMLParser):
