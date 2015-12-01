@@ -20,9 +20,11 @@ class InvalidNonceException(Exception):
     def __str__(self):
         return "Expected a nonce greater than %d" % self.expectedNonce
 
+
 class InvalidSortOrderException(Exception):
     ''' Exception thrown when an invalid sort order is passed '''
     pass
+
 
 class TradeAccountInfo(object):
     '''An instance of this class will be returned by
@@ -106,8 +108,7 @@ class CancelOrderResult(object):
             setattr(self, "balance_%s" % c, funds.get(unicode(c), 0))
 
 
-def setHistoryParams(params, from_number, count_number, from_id, end_id,
-                     order, since, end):
+def setHistoryParams(params, from_number, count_number, from_id, end_id, order, since, end):
     if from_number is not None:
         params["from"] = "%d" % from_number
     if count_number is not None:
@@ -170,8 +171,8 @@ class TradeAPI(object):
                 # The assumption is that the invalid nonce message looks like
                 # "invalid nonce parameter; on key:4, you sent:3"
                 s = err_message.split(",")
-                expected = int(s[-2].split(":")[1])
-                actual = int(s[-1].split(":")[1])
+                expected = int(s[-2].split(":")[1].strip("'"))
+                actual = int(s[-1].split(":")[1].strip("'"))
                 if raiseIfInvalidNonce:
                     raise InvalidNonceException(method, expected, actual)
 

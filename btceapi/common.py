@@ -23,19 +23,24 @@ exps = [decimal.Decimal("1e-%d" % i) for i in range(16)]
 btce_domain = "btc-e.com"
 
 all_currencies = ("btc", "usd", "rur", "ltc", "nmc", "eur", "nvc",
-                  "trc", "ppc", "ftc", "xpm")
-all_pairs = ("btc_usd", "btc_rur", "btc_eur", "ltc_btc", "ltc_usd",
-             "ltc_rur", "ltc_eur", "nmc_btc", "nmc_usd", "nvc_btc",
-             "nvc_usd", "usd_rur", "eur_usd", "eur_rur", "trc_btc",
-             "ppc_btc", "ppc_usd", "ftc_btc", "xpm_btc")
+                  "ppc", "cnh", "gbp")
+all_pairs = ("btc_usd", "btc_rur", "btc_eur", "btc_cnh", "btc_gbp",
+             "ltc_btc", "ltc_usd", "ltc_rur", "ltc_eur", "ltc_cnh",
+             "ltc_gbp", "nmc_btc", "nmc_usd", "nvc_btc", "nvc_usd",
+             "usd_rur", "usd_cnh", "eur_usd", "eur_rur", "gbp_usd",
+             "ppc_btc", "ppc_usd")
 
 max_digits = {"btc_usd": 3,
               "btc_rur": 5,
               "btc_eur": 5,
+              "btc_cnh": 2,
+              "btc_gbp": 5,
               "ltc_btc": 5,
               "ltc_usd": 6,
               "ltc_rur": 5,
               "ltc_eur": 3,
+              "ltc_cnh": 2,
+              "ltc_gbp": 3,
               "nmc_btc": 5,
               "nmc_usd": 3,
               "nvc_btc": 5,
@@ -43,19 +48,22 @@ max_digits = {"btc_usd": 3,
               "usd_rur": 5,
               "eur_usd": 5,
               "eur_rur": 5,
-              "trc_btc": 5,
+              "usd_cnh": 4,
+              "gbp_usd": 4,
               "ppc_btc": 5,
-              "ppc_usd": 3,
-              "ftc_btc": 5,
-              "xpm_btc": 5}
+              "ppc_usd": 3}
 
 min_orders = {"btc_usd": decimal.Decimal("0.01"),
               "btc_rur": decimal.Decimal("0.01"),
               "btc_eur": decimal.Decimal("0.01"),
+              "btc_cnh": decimal.Decimal("0.01"),
+              "btc_gbp": decimal.Decimal("0.01"),
               "ltc_btc": decimal.Decimal("0.1"),
               "ltc_usd": decimal.Decimal("0.1"),
               "ltc_rur": decimal.Decimal("0.1"),
               "ltc_eur": decimal.Decimal("0.1"),
+              "ltc_cnh": decimal.Decimal("0.1"),
+              "ltc_gbp": decimal.Decimal("0.1"),
               "nmc_btc": decimal.Decimal("0.1"),
               "nmc_usd": decimal.Decimal("0.1"),
               "nvc_btc": decimal.Decimal("0.1"),
@@ -63,11 +71,10 @@ min_orders = {"btc_usd": decimal.Decimal("0.01"),
               "usd_rur": decimal.Decimal("0.1"),
               "eur_usd": decimal.Decimal("0.1"),
               "eur_rur": decimal.Decimal("0.1"),
-              "trc_btc": decimal.Decimal("0.1"),
+              "usd_cnh": decimal.Decimal("0.1"),
+              "gbp_usd": decimal.Decimal("0.1"),
               "ppc_btc": decimal.Decimal("0.1"),
-              "ppc_usd": decimal.Decimal("0.1"),
-              "ftc_btc": decimal.Decimal("0.1"),
-              "xpm_btc": decimal.Decimal("0.1")}
+              "ppc_usd": decimal.Decimal("0.1")}
 
 
 def parseJSONResponse(response):
@@ -89,7 +96,11 @@ BODY_COOKIE_RE = re.compile(r'document\.cookie="a=([a-f0-9]{32});path=/;";')
 
 class BTCEConnection:
     def __init__(self, timeout=30):
-        self.conn = httplib.HTTPSConnection(btce_domain, timeout=timeout)
+        self._timeout = timeout
+        self.setup_connection()
+
+    def setup_connection(self):
+        self.conn = httplib.HTTPSConnection(btce_domain, timeout=self._timeout)
         self.cookie = None
 
     def close(self):
@@ -98,8 +109,15 @@ class BTCEConnection:
     def getCookie(self):
         self.cookie = ""
 
-        self.conn.request("GET", '/')
-        response = self.conn.getresponse()
+        try:
+            self.conn.request("GET", '/')
+            response = self.conn.getresponse()
+        except Exception:
+            # reset connection so it doesn't stay in a weird state if we catch
+            # the error in some other place
+            self.conn.close()
+            self.setup_connection()
+            raise
 
         setCookieHeader = response.getheader("Set-Cookie")
         match = HEADER_COOKIE_RE.search(setCookieHeader)
@@ -122,9 +140,10 @@ class BTCEConnection:
                 self.getCookie()
 
             headers.update({"Cookie": self.cookie})
-
-        self.conn.request("POST", url, params, headers)
-        response = self.conn.getresponse().read()
+        try:
+            self.conn.request("POST", url, params, headers)
+        finally:
+            response = self.conn.getresponse().read()
 
         return response
 
@@ -153,7 +172,7 @@ def validateOrder(pair, trade_type, rate, amount):
     minimum_amount = min_orders[pair]
     formatted_min_amount = formatCurrency(minimum_amount, pair)
     if amount < minimum_amount:
-        msg = "Trade amount too small; should be >= %s" % formatted_min_amount
+        msg = "Trade amount %r is too small, it should be >= %s" % (amount,formatted_min_amount)
         raise InvalidTradeAmountException(msg)
 
 
